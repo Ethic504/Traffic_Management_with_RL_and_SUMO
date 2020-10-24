@@ -39,13 +39,15 @@ def waitingTimeFunc():
 
 # https://sumo.dlr.de/daily/pydoc/traci._simulation.html for getting any info of the simulation
 # contains TraCI control loop
+#from Q_Learning_agent import Agent as agent # calling Q_Learnign_agent file
+
 def run():
     #getTime_list = []
     #getWaitingTime_list = []
-    #print('here is waiting ', traci.vehicle.getWaitingTime("40")) # get the waiting time of a vehicle with ID
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
+        #agent(traci.simulation.getTime(), waitingTimeFunc())
         #getTime_list.append(traci.simulation.getTime())
         #getWaitingTime_list.append(waitingTimeFunc())
     #data_write(getTime_list, getWaitingTime_list)
@@ -61,17 +63,25 @@ def data_write(getTime_list, getWaitingTime_list):
     df.to_csv('set2.csv') # write a csv file
     print("Ok")
 '''
+# this function is responsibe for running the simulation
+def sumo_config():
+    while True:
+        sumoBinary = checkBinary('sumo')
+        traci.start([sumoBinary, "-c", "map.sumo.cfg",
+                                 "--tripinfo-output", "tripinfo.xml"])
+        run()
+        print("**************************************")
+
 # main entry point
 if __name__ == "__main__":
     options = get_options()
 
     # check binary
-    if options.nogui:
-        sumoBinary = checkBinary('sumo')
-    else:
-        sumoBinary = checkBinary('sumo-gui')
+    # if options.nogui:
+    #     sumoBinary = checkBinary('sumo')
+    # else:
+    #     sumoBinary = checkBinary('sumo-gui')
 
     # traci starts sumo as a subprocess and then this script connects and runs
-    traci.start([sumoBinary, "-c", "map.sumo.cfg",
-                             "--tripinfo-output", "tripinfo.xml"])
-    run()
+    #traci.start([sumoBinary, "-c", "map.sumo.cfg","--tripinfo-output", "tripinfo.xml"]) # starts traci and take the trip info for other calculation
+    sumo_config()
