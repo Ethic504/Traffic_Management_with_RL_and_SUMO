@@ -38,6 +38,9 @@ def waitingTimeFunc():
     
 # main sumo runner and act as single episode each time it is called
 def run(q_table,exploration_rate):
+    time_list = []
+    waiting_list = []
+    action_list = []
     action_space = (0, 8, 16, 24, 32, 48, 52, 64)
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         traci.simulationStep()
@@ -47,48 +50,63 @@ def run(q_table,exploration_rate):
         if exploration_rate_threshold > exploration_rate: # agent will exploite the environment 
             action = np.argmax(q_table[state,:]) # and will choose the max value for the action from the Q-table
             generate_light_control_file(action)
+            
         else: # agent will explore the environment 
             action = random.sample(action_space,1) # and sample an action randomly/takes new action
                     #random.sample(action_space,1) # taking a single action from the touple as string
-            generate_light_control_file(action)
-    
+            generate_light_control_file(action) # sending action as a list with 1 element
+        print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
+        time_list.append(traci.simulation.getTime())
+        waiting_list.append(waitingTimeFunc())
+        action_list.append(action)
+    data_write(time_list, waiting_list, action_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
+    
+
+import pandas as pd
+import csv
+def data_write(Time, waitingTime, action):
+    # Create the dataframe 
+    df = pd.DataFrame({'Time'       : Time, 
+                        'Wate'  : waitingTime,
+                        'Action' : action}) 
+    df.to_csv('action_list.csv') # write a csv file
+    print("Leaving Simulation...")
 
 def generate_light_control_file(action):
-    
+    ac = action[0] # action is a list so we took a variable ac for carrying the list element
+    #print(ac)
     with open("light_control1.add.xml", "w") as lights:
-        print("""
-        <additional>>
-            <tlLogic id="1575325597" type="static" programID="2" offset="0">
-                <phase duration="%action" state="gggrrr"/>
-                <phase duration="6"  state="gggyyy"/>
-                <phase duration="%action" state="gggGGG"/>
-                <phase duration="6"  state="gggyyy"/>
-            </tlLogic>
-            <tlLogic id="1575361842" type="static" programID="2" offset="0">
-                <phase duration="%action" state="gggGGG"/>
-                <phase duration="6"  state="gggyyy"/>
-                <phase duration="%action" state="gggrrr"/>
-        		<phase duration="6"  state="gggyyy"/>
-            </tlLogic>
-            <tlLogic id="1693014276" type="static" programID="2" offset="0">
-                <phase duration="%action" state="gggrrr"/>
-                <phase duration="6"  state="gggrrr"/>
-                <phase duration="%action" state="gggGGG"/>
-                <phase duration="6"  state="gggyyy"/>
-            </tlLogic>
-            <tlLogic id="210330099" type="static" programID="2" offset="0">
-                <phase duration="%action" state="GGGggg"/>
-                <phase duration="6"  state="yyyggg"/>
-                <phase duration="%action" state="rrrggg"/>
-                <phase duration="6"  state="rrrggg"/>
-            </tlLogic>
-        </additional>
-
+        lights.write("""
+<additional>>
+    <tlLogic id="1575325597" type="static" programID="2" offset="0">
+        <phase duration="%ac" state="gggrrr"/>
+        <phase duration="6"  state="gggyyy"/>
+        <phase duration="%ac" state="gggGGG"/>
+        <phase duration="6"  state="gggyyy"/>
+    </tlLogic>
+    <tlLogic id="1575361842" type="static" programID="2" offset="0">
+        <phase duration="%ac" state="gggGGG"/>
+        <phase duration="6"  state="gggyyy"/>
+        <phase duration="%ac" state="gggrrr"/>
+		<phase duration="6"  state="gggyyy"/>
+    </tlLogic>
+    <tlLogic id="1693014276" type="static" programID="2" offset="0">
+        <phase duration="%ac" state="gggrrr"/>
+        <phase duration="6"  state="gggrrr"/>
+        <phase duration="%ac" state="gggGGG"/>
+        <phase duration="6"  state="gggyyy"/>
+    </tlLogic>
+    <tlLogic id="210330099" type="static" programID="2" offset="0">
+        <phase duration="%ac" state="GGGggg"/>
+        <phase duration="6"  state="yyyggg"/>
+        <phase duration="%ac" state="rrrggg"/>
+        <phase duration="6"  state="rrrggg"/>
+    </tlLogic>
+</additional>
               """
             )
-    pass
 
 # this function is responsibe for running the simulation
 def sumo_config():
@@ -116,7 +134,7 @@ def agent():
     q_table = np.zeros((state_space_size, action_space_size))
     #print(q_table)
     
-    num_episodes = 1000             # number of episode
+    num_episodes = 1            # number of episode
     max_steps_per_episode = 1000     # number of step per episode
     
     learning_rate = 0.1             # value of alpha
