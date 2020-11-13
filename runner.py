@@ -44,9 +44,13 @@ def waitingTimeFunc():
 def run():
     #getTime_list = []
     #getWaitingTime_list = []
+    time = 0
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
+        if time == 6:
+            break
+        time += 1
         #agent(traci.simulation.getTime(), waitingTimeFunc())
         #getTime_list.append(traci.simulation.getTime())
         #getWaitingTime_list.append(waitingTimeFunc())

@@ -6,9 +6,9 @@
         <phase duration="6"  state="gggyyy"/>
     </tlLogic>
     <tlLogic id="1575361842" type="static" programID="2" offset="0">
-        <phase duration="39" state="gggrrr"/>
+        <phase duration="36" state="gggGGG"/>
         <phase duration="6"  state="gggyyy"/>
-        <phase duration="39" state="gggGGG"/>
+        <phase duration="39" state="gggrrr"/>
 		<phase duration="6"  state="gggyyy"/>
     </tlLogic>
     <tlLogic id="1693014276" type="static" programID="2" offset="0">
