@@ -38,9 +38,7 @@ def waitingTimeFunc():
     
 # main sumo runner and act as single episode each time it is called
 def run(q_table,exploration_rate):
-    action_space = ('grgr 8', 'grgr 16', 'grgr 32', 'grgr 48',
-                    'rgrg 8', 'rgrg 16', 'rgrg 32', 'rgrg 48'
-                    'gggg 0')
+    action_space = (0, 8, 16, 24, 32, 48, 52, 64)
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         traci.simulationStep()
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
@@ -60,7 +58,34 @@ def run(q_table,exploration_rate):
 def generate_light_control_file(action):
     
     with open("light_control1.add.xml", "w") as lights:
-        print("""<additional>
+        print("""
+        <additional>>
+            <tlLogic id="1575325597" type="static" programID="2" offset="0">
+                <phase duration="%action" state="gggrrr"/>
+                <phase duration="6"  state="gggyyy"/>
+                <phase duration="%action" state="gggGGG"/>
+                <phase duration="6"  state="gggyyy"/>
+            </tlLogic>
+            <tlLogic id="1575361842" type="static" programID="2" offset="0">
+                <phase duration="%action" state="gggGGG"/>
+                <phase duration="6"  state="gggyyy"/>
+                <phase duration="%action" state="gggrrr"/>
+        		<phase duration="6"  state="gggyyy"/>
+            </tlLogic>
+            <tlLogic id="1693014276" type="static" programID="2" offset="0">
+                <phase duration="%action" state="gggrrr"/>
+                <phase duration="6"  state="gggrrr"/>
+                <phase duration="%action" state="gggGGG"/>
+                <phase duration="6"  state="gggyyy"/>
+            </tlLogic>
+            <tlLogic id="210330099" type="static" programID="2" offset="0">
+                <phase duration="%action" state="GGGggg"/>
+                <phase duration="6"  state="yyyggg"/>
+                <phase duration="%action" state="rrrggg"/>
+                <phase duration="6"  state="rrrggg"/>
+            </tlLogic>
+        </additional>
+
               """
             )
     pass
@@ -122,9 +147,10 @@ def agent():
 agent()    
     
 '''
-dum = ['grgr 8', 'grgr 16', 'grgr 32', 'grgr 48',
-       'rgrg 8', 'rgrg 16', 'rgrg 32', 'rgrg 48']
-
+dum = (0, 8, 16, 24, 32, 48, 52, 64)
+action_space = ('grgr 8', 'grgr 16', 'grgr 32', 'grgr 48',
+                    'rgrg 8', 'rgrg 16', 'rgrg 32', 'rgrg 48'
+                    'gggg 0')
 for i in range(10):
     x = random.sample(dum, 2)
     print(x)
