@@ -1,7 +1,7 @@
 <additional>
         <tlLogic id="1575325597" type="static" programID="2" offset="0">
         <phase duration="39" state="gggrrr"/>
-        <phase duration="6"  state="gggrrr"/>
+        <phase duration="6"  state="gggyyy"/>
         <phase duration="39" state="gggGGG"/>
         <phase duration="6"  state="gggyyy"/>
     </tlLogic>
