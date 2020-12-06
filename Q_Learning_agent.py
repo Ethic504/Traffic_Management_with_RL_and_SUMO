@@ -3,7 +3,7 @@ import gym
 import random
 import time
 from IPython.display import clear_output
-#import runner as runsumo
+import runner as runsumo
 
 
 env =gym.make("FrozenLake-v0")      

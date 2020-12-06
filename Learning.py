@@ -1,6 +1,12 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import sys
 import optparse
+import random
+from sumolib import checkBinary  # Checks for the binary in environ vars
+import traci
 
 # import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -8,10 +14,6 @@ if 'SUMO_HOME' in os.environ:
     sys.path.append(tools)
 else:
     sys.exit("please declare environment variable 'SUMO_HOME'")
-
-
-from sumolib import checkBinary  # Checks for the binary in environ vars
-import traci
 
 def get_options():
     opt_parser = optparse.OptionParser()
@@ -34,16 +36,26 @@ def waitingTimeFunc():
             waitingTimeList.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
         del L0
     return sum(waitingTimeList)
-    waitingTimeList.clear()
+   
+def rewardFunc(waitingTime):
+    if waitingTime > 500:
+        reword = -1
+    elif waitingTime < 200:
+        reward = 10
+    elif waitingTime > 200 and waitingTime < 500:
+        reward = 5
+    else:
+        reward = -10
+    return reward
     
 # main sumo runner and act as single episode each time it is called
-def run(q_table,exploration_rate):
+def run(q_table,exploration_rate,learning_rate,discount_rate):
     time_list = []
     waiting_list = []
     action_list = []
-    action_space = (0, 8, 16, 24, 32, 48, 52, 64)
+    action_space = (8, 16, 24, 32, 48, 52, 64)
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
-        traci.simulationStep()
+        
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
         state = traci.simulation.getTime()
         exploration_rate_threshold = random.uniform(0, 1) # set the exploration thrasehold random in between 0 to 1, this will help the agent so take decission for going exploration or exploatation 
@@ -55,14 +67,21 @@ def run(q_table,exploration_rate):
             action = random.sample(action_space,1) # and sample an action randomly/takes new action
                     #random.sample(action_space,1) # taking a single action from the touple as string
             generate_light_control_file(action) # sending action as a list with 1 element
-        print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
+        traci.simulationStep() # performs a simulation step
+        new_state = traci.simulation.getTime() # 
+        reward = rewardFunc(waitingTimeFunc())
+        # update Q-table
+        q_table[state,action] = q_table[state,action] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[new_state,:]))
+        
+        #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
         waiting_list.append(waitingTimeFunc())
         action_list.append(action)
     data_write(time_list, waiting_list, action_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
-    
+    print("Reward is ",reward)
+    return q_table
 
 import pandas as pd
 import csv
@@ -75,38 +94,35 @@ def data_write(Time, waitingTime, action):
     print("Leaving Simulation...")
 
 def generate_light_control_file(action):
-    ac = action[0] # action is a list so we took a variable ac for carrying the list element
-    #print(ac)
+    a = action[0] # action is a list so we took a variable ac for carrying the list element
+    #print(a)
     with open("light_control1.add.xml", "w") as lights:
-        lights.write("""
-<additional>>
-    <tlLogic id="1575325597" type="static" programID="2" offset="0">
-        <phase duration="%ac" state="gggrrr"/>
-        <phase duration="6"  state="gggyyy"/>
-        <phase duration="%ac" state="gggGGG"/>
-        <phase duration="6"  state="gggyyy"/>
-    </tlLogic>
-    <tlLogic id="1575361842" type="static" programID="2" offset="0">
-        <phase duration="%ac" state="gggGGG"/>
-        <phase duration="6"  state="gggyyy"/>
-        <phase duration="%ac" state="gggrrr"/>
-		<phase duration="6"  state="gggyyy"/>
-    </tlLogic>
-    <tlLogic id="1693014276" type="static" programID="2" offset="0">
-        <phase duration="%ac" state="gggrrr"/>
-        <phase duration="6"  state="gggrrr"/>
-        <phase duration="%ac" state="gggGGG"/>
-        <phase duration="6"  state="gggyyy"/>
-    </tlLogic>
-    <tlLogic id="210330099" type="static" programID="2" offset="0">
-        <phase duration="%ac" state="GGGggg"/>
-        <phase duration="6"  state="yyyggg"/>
-        <phase duration="%ac" state="rrrggg"/>
-        <phase duration="6"  state="rrrggg"/>
-    </tlLogic>
-</additional>
-              """
-            )
+        print('<additional>>', file = lights)
+        print('<tlLogic id="1575325597" type="static" programID="2" offset="0">', file = lights)
+        print('<phase duration="%a" state="gggrrr"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggyyy"/>', file = lights)
+        print('<phase duration="%a" state="gggGGG"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggyyy"/>', file = lights)
+        print('</tlLogic>', file = lights)
+        print('<tlLogic id="1575361842" type="static" programID="2" offset="0">', file = lights)
+        print('<phase duration="%a" state="gggGGG"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggyyy"/>', file = lights)
+        print('<phase duration="%a" state="gggrrr"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggyyy"/>', file = lights)
+        print('</tlLogic>', file = lights)
+        print('<tlLogic id="1693014276" type="static" programID="2" offset="0">', file = lights)
+        print('<phase duration="%a" state="gggrrr"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggrrr"/>', file = lights)
+        print('<phase duration="%a" state="gggGGG"/>' %(a), file = lights)
+        print('<phase duration="6"  state="gggyyy"/>', file = lights)
+        print('</tlLogic>', file = lights)
+        print('<tlLogic id="210330099" type="static" programID="2" offset="0">', file = lights)
+        print('<phase duration="%a" state="GGGggg"/>' %(a), file = lights)
+        print('<phase duration="6"  state="yyyggg"/>', file = lights)
+        print('<phase duration="%a" state="rrrggg"/>' %(a), file = lights)
+        print('<phase duration="6"  state="rrrggg"/>', file = lights)
+        print('</tlLogic>', file = lights)
+        print('</additional>', file = lights)
 
 # this function is responsibe for running the simulation
 def sumo_config():
@@ -124,17 +140,16 @@ if __name__ == "__main__":
     
 #***************************************************************************
 import numpy as np
-import gym
-import random
-import time
-from IPython.display import clear_output
+#import gym
+#import time
+#from IPython.display import clear_output
 def agent():  
     action_space_size = 8 # 4 traffic light 
     state_space_size = 100
-    q_table = np.zeros((state_space_size, action_space_size))
+    q_table = np.zeros((state_space_size, action_space_size)) # row & column
     #print(q_table)
     
-    num_episodes = 1            # number of episode
+    num_episodes = 3            # number of episode
     max_steps_per_episode = 1000     # number of step per episode
     
     learning_rate = 0.1             # value of alpha
@@ -152,14 +167,15 @@ def agent():
     for episode in range(num_episodes): # this loop contains everything for a single episode
         #sumo_config()
         rewards_current_episode = 0 # reword with in the current episode and for every new episode it sets to 0 and get updated in the episode loop              
-        run(q_table,exploration_rate)
+        print("Running ", num_episodes, " simulation")
+        run(q_table,exploration_rate,learning_rate,discount_rate)
+        
         # Exploration rate decay
-        exploration_rate = min_exploration_rate + \
-            (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*episode)
+        # exploration_rate = min_exploration_rate + \
+        #     (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*episode)
             
-        rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
-
-                
+        # rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
+    print(q_table)           
     
     
 agent()    
