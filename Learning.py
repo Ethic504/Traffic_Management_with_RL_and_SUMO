@@ -39,45 +39,57 @@ def waitingTimeFunc():
    
 def rewardFunc(waitingTime):
     if waitingTime > 500:
-        reword = -1
+        reWoRdd = -1
     elif waitingTime < 200:
-        reward = 10
+        reWoRdd = 10
     elif waitingTime > 200 and waitingTime < 500:
-        reward = 5
+        reWoRdd = 5
     else:
-        reward = -10
-    return reward
+        reWoRdd = -10
+    return reWoRdd
     
 # main sumo runner and act as single episode each time it is called
 def run(q_table,exploration_rate,learning_rate,discount_rate):
     time_list = []
     waiting_list = []
     action_list = []
+    reward_list = []
     action_space = (8, 16, 24, 32, 48, 52, 64)
+    column = 0
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
-        state = traci.simulation.getTime()
+        state = int(traci.simulation.getTime())
         exploration_rate_threshold = random.uniform(0, 1) # set the exploration thrasehold random in between 0 to 1, this will help the agent so take decission for going exploration or exploatation 
         if exploration_rate_threshold > exploration_rate: # agent will exploite the environment 
-            action = np.argmax(q_table[state,:]) # and will choose the max value for the action from the Q-table
-            generate_light_control_file(action)
+            action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
+            generate_light_control_file(action_space[action]) 
             
         else: # agent will explore the environment 
             action = random.sample(action_space,1) # and sample an action randomly/takes new action
                     #random.sample(action_space,1) # taking a single action from the touple as string
-            generate_light_control_file(action) # sending action as a list with 1 element
+            int_action = action[0] # action is a list of 0 index so we made a variable from it
+            column = action_space.index(int_action) # 
+            generate_light_control_file(int_action) # sending action as a list with 1 element
         traci.simulationStep() # performs a simulation step
-        new_state = traci.simulation.getTime() # 
+        new_state = int(traci.simulation.getTime()) # 
         reward = rewardFunc(waitingTimeFunc())
+        
+        
+        #print(state,int_action,new_state)
+        #print(type(reward),type(state), type(new_state),type(int_action))
+        
+        
+        
         # update Q-table
-        q_table[state,action] = q_table[state,action] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[new_state,:]))
+        q_table[state,column] = q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))
         
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
         waiting_list.append(waitingTimeFunc())
         action_list.append(action)
-    data_write(time_list, waiting_list, action_list)
+        reward_list.append(reward)
+    data_write(time_list, waiting_list, action_list,reward_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
     print("Reward is ",reward)
@@ -85,16 +97,17 @@ def run(q_table,exploration_rate,learning_rate,discount_rate):
 
 import pandas as pd
 import csv
-def data_write(Time, waitingTime, action):
+def data_write(Time, waitingTime, action, reward):
     # Create the dataframe 
     df = pd.DataFrame({'Time'       : Time, 
                         'Wate'  : waitingTime,
-                        'Action' : action}) 
+                        'Action' : action,
+                        'Reward'  : reward,}) 
     df.to_csv('action_list.csv') # write a csv file
     print("Leaving Simulation...")
 
-def generate_light_control_file(action):
-    a = action[0] # action is a list so we took a variable ac for carrying the list element
+def generate_light_control_file(int_action):
+    a = int_action
     #print(a)
     with open("light_control1.add.xml", "w") as lights:
         print('<additional>>', file = lights)
@@ -144,13 +157,13 @@ import numpy as np
 #import time
 #from IPython.display import clear_output
 def agent():  
-    action_space_size = 8 # 4 traffic light 
-    state_space_size = 100
+    action_space_size = 7
+    state_space_size = 2000
     q_table = np.zeros((state_space_size, action_space_size)) # row & column
     #print(q_table)
     
-    num_episodes = 3            # number of episode
-    max_steps_per_episode = 1000     # number of step per episode
+    num_episodes = 100            # number of episode
+    #max_steps_per_episode = 100     # number of step per episode
     
     learning_rate = 0.1             # value of alpha
     discount_rate = 0.99            # value of lamda
@@ -167,16 +180,21 @@ def agent():
     for episode in range(num_episodes): # this loop contains everything for a single episode
         #sumo_config()
         rewards_current_episode = 0 # reword with in the current episode and for every new episode it sets to 0 and get updated in the episode loop              
-        print("Running ", num_episodes, " simulation")
+        print("Running ", episode, " simulation")
         run(q_table,exploration_rate,learning_rate,discount_rate)
-        
+        sumo_config()
         # Exploration rate decay
-        # exploration_rate = min_exploration_rate + \
-        #     (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*episode)
+        exploration_rate = min_exploration_rate + \
+             (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*episode)
             
-        # rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
+        rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
     print(q_table)           
     
+    reward_per_hun_epi = np.split(np.array(rewards_all_episodes),num_episodes/100)
+    count = 100
+    for r in reward_per_hun_epi:
+        print(count, ' : ', str(sum(r/100)))
+        count += 100
     
 agent()    
     
