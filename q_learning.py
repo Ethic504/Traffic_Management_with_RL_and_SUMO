@@ -89,20 +89,21 @@ def run(q_table,exploration_rate,learning_rate,discount_rate):
         waiting_list.append(waitingTimeFunc())
         action_list.append(action)
         reward_list.append(reward)
-    data_write(time_list, waiting_list, action_list,reward_list)
+    data_write(time_list, waiting_list, action_list,reward_list, sum(reward_list))
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
-    print("Reward is ",reward)
+    print("Reward is ",sum(reward_list))
     return q_table
 
 import pandas as pd
 import csv
-def data_write(Time, waitingTime, action, reward):
+def data_write(Time, waitingTime, action, reward, su):
     # Create the dataframe 
     df = pd.DataFrame({'Time'       : Time, 
                         'Wate'  : waitingTime,
                         'Action' : action,
-                        'Reward'  : reward,}) 
+                        'Reward'  : reward,
+                        'Sum_reward': su,}) 
     df.to_csv('action_list.csv') # write a csv file
     print("Leaving Simulation...")
 
@@ -146,7 +147,7 @@ def q_table_to_csv(q_table):
         # using csv.writer method from CSV package 
         write = csv.writer(f) 
           
-        write.writerow(fields) 
+        #write.writerow(fields) 
         write.writerows(q_table) 
 
 # this function is responsibe for running the simulation

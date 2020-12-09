@@ -69,11 +69,13 @@ def generate_light_control_file(action):
         print('</additional>', file = lights)
 
 def run(q_table):
-    action_space = (8, 16, 24, 32, 48, 52, 64)
+    action_space = [8, 16, 24, 32, 48, 52, 64]
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         state = int(traci.simulation.getTime())
         action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
-        generate_light_control_file(action_space[action])
+        print(action,type(action))
+        #ac = action_space[action]
+        #generate_light_control_file(ac)
         
     print("Done...")
     traci.close()   # this is to stop the simulation that was running 
@@ -86,10 +88,11 @@ def agent_test():
         csv_reader = reader(read_obj)
         # Pass reader object to list() to get a list of lists
         q_table = list(csv_reader)
-        #print(q_table)
+        print(q_table)
     for episodes in range(3):
         print("Running ", episodes+1, " simulation")
-        run(q_table)
+        #run(q_table)
+        print(q_table[0][0])
         
     
 
