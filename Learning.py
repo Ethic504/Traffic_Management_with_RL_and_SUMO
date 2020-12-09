@@ -137,6 +137,18 @@ def generate_light_control_file(int_action):
         print('</tlLogic>', file = lights)
         print('</additional>', file = lights)
 
+def q_table_to_csv(q_table):
+    # field names  
+    fields = [8, 16, 24, 32, 48, 52, 64]   
+      
+    with open('q_table.csv', 'w') as f: 
+          
+        # using csv.writer method from CSV package 
+        write = csv.writer(f) 
+          
+        write.writerow(fields) 
+        write.writerows(q_table) 
+
 # this function is responsibe for running the simulation
 def sumo_config():
     #while True:
@@ -156,7 +168,7 @@ import numpy as np
 #import gym
 #import time
 #from IPython.display import clear_output
-def agent():  
+def agent_train():  
     action_space_size = 7
     state_space_size = 2000
     q_table = np.zeros((state_space_size, action_space_size)) # row & column
@@ -188,15 +200,32 @@ def agent():
              (max_exploration_rate - min_exploration_rate) * np.exp(-exploration_decay_rate*episode)
             
         rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
-    print(q_table)           
+    #print(q_table)           
+    q_table_to_csv(q_table) # to take Q-table in csv file
     
-    reward_per_hun_epi = np.split(np.array(rewards_all_episodes),num_episodes/100)
-    count = 100
-    for r in reward_per_hun_epi:
-        print(count, ' : ', str(sum(r/100)))
-        count += 100
+    # reward_per_hun_epi = np.split(np.array(rewards_all_episodes),num_episodes/100)
+    # count = 100
+    # for r in reward_per_hun_epi:
+    #     print(count, ' : ', str(sum(r/100)))
+    #     count += 100
     
-agent()    
+agent_train()  
+
+#****************************Training Phase done  
+from csv import reader
+def agent_test():
+    # read csv file as a list of lists
+    with open('q_table.csv', 'r') as read_obj:
+        # pass the file object to reader() to get the reader object
+        csv_reader = reader(read_obj)
+        # Pass reader object to list() to get a list of lists
+        q_table = list(csv_reader)
+        #print(q_table)
+    #for episodes in range(3):
+        
+    pass
+
+agent_test()
     
 '''
 dum = (0, 8, 16, 24, 32, 48, 52, 64)
