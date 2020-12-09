@@ -165,9 +165,7 @@ if __name__ == "__main__":
     
 #***************************************************************************
 import numpy as np
-#import gym
 #import time
-#from IPython.display import clear_output
 def agent_train():  
     action_space_size = 7
     state_space_size = 2000
