@@ -210,22 +210,6 @@ def agent_train():
     #     count += 100
     
 agent_train()  
-
-#****************************Training Phase done  
-from csv import reader
-def agent_test():
-    # read csv file as a list of lists
-    with open('q_table.csv', 'r') as read_obj:
-        # pass the file object to reader() to get the reader object
-        csv_reader = reader(read_obj)
-        # Pass reader object to list() to get a list of lists
-        q_table = list(csv_reader)
-        #print(q_table)
-    #for episodes in range(3):
-        
-    pass
-
-agent_test()
     
 '''
 dum = (0, 8, 16, 24, 32, 48, 52, 64)
@@ -235,12 +219,4 @@ action_space = ('grgr 8', 'grgr 16', 'grgr 32', 'grgr 48',
 for i in range(10):
     x = random.sample(dum, 2)
     print(x)
-'''    
-    
-    
-    
-    
-    
-    
-    
-    
+'''     
