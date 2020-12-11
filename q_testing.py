@@ -68,14 +68,27 @@ def generate_light_control_file(action):
         print('</tlLogic>', file = lights)
         print('</additional>', file = lights)
 
-def run(q_table):
+def run(q_table,episodes):
     action_space = [8, 16, 24, 32, 48, 52, 64]
+    print("Running Simulation ", episodes)
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
-        state = traci.simulation.getTime()
-        #action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
-        print(state,type(state))
-        #ac = action_space[action]
-        #generate_light_control_file(ac)
+        traci.simulationStep() # performs a simulation step
+        state = int(traci.simulation.getTime())
+        try:
+            # it will choose the max value index from the Q-table
+            rows_count = len(q_table)
+            for i in range(rows_count):
+                a_row = q_table[i]
+                max_value = max(a_row)
+                index = a_row.index(max_value)
+                #print("The max value ",max_value, " and Index in ",index)
+            #print(state,type(state))
+        except ValueError:
+            print("The q_table empty")
+            break
+        
+        action = action_space[action_space[index]]
+        generate_light_control_file(action)
         
     print("Done...")
     traci.close()   # this is to stop the simulation that was running 
@@ -88,9 +101,7 @@ def agent_test():
     q_table = [list( map(float,i) ) for i in q_table] # convert list of string into list of integer
     print(q_table)
     for episodes in range(3):
-        print("Running ", episodes+1, " simulation")
-        run(q_table)
-        print(q_table[0][0])
+        run(q_table,episodes)
         
     
 

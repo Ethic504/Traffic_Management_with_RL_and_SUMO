@@ -62,15 +62,16 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         print(state)
         exploration_rate_threshold = random.uniform(0, 1) # set the exploration thrasehold random in between 0 to 1, this will help the agent so take decission for going exploration or exploatation 
         if exploration_rate_threshold > exploration_rate: # agent will exploite the environment 
-            action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
+            column = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
+            action = action_space[column]
             generate_light_control_file(action_space[action]) 
             
         else: # agent will explore the environment 
-            action = random.sample(action_space,1) # and sample an action randomly/takes new action
+            rand_action = random.sample(action_space,1) # and sample an action randomly/takes new action
                     #random.sample(action_space,1) # taking a single action from the touple as string
-            int_action = action[0] # action is a list of 0 index so we made a variable from it
-            column = action_space.index(int_action) # 
-            generate_light_control_file(int_action) # sending action as a list with 1 element
+            action = rand_action[0] # action is a list of 0 index so we made a variable from it
+            column = action_space.index(action) # 
+            generate_light_control_file(action) # sending action as a list with 1 element
         traci.simulationStep() # performs a simulation step
         new_state = int(traci.simulation.getTime()) # 
         reward = rewardFunc(waitingTimeFunc())
