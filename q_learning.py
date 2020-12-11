@@ -49,17 +49,17 @@ def rewardFunc(waitingTime):
     return reWoRdd
     
 # main sumo runner and act as single episode each time it is called
-def run(q_table,exploration_rate,learning_rate,discount_rate):
+def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
     time_list = []
     waiting_list = []
     action_list = []
     reward_list = []
-    action_space = (8, 16, 24, 32, 48, 52, 64)
     column = 0
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
         state = int(traci.simulation.getTime())
+        print(state)
         exploration_rate_threshold = random.uniform(0, 1) # set the exploration thrasehold random in between 0 to 1, this will help the agent so take decission for going exploration or exploatation 
         if exploration_rate_threshold > exploration_rate: # agent will exploite the environment 
             action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
@@ -140,15 +140,12 @@ def generate_light_control_file(int_action):
 
 def q_table_to_csv(q_table):
     # field names  
-    fields = [8, 16, 24, 32, 48, 52, 64]   
-      
-    with open('q_table.csv', 'w') as f: 
+    #fields = [8, 16, 24, 32, 48, 52, 64]    
+    with open('q_table.csv', 'w', newline="") as f:  
+        writer = csv.writer(f)   # using csv.writer method from CSV package
           
-        # using csv.writer method from CSV package 
-        write = csv.writer(f) 
-          
-        #write.writerow(fields) 
-        write.writerows(q_table) 
+        #write.writerow(fields)  # when u need field name on top row
+        writer.writerows(q_table) 
 
 # this function is responsibe for running the simulation
 def sumo_config():
@@ -173,7 +170,9 @@ def agent_train():
     q_table = np.zeros((state_space_size, action_space_size)) # row & column
     #print(q_table)
     
-    num_episodes = 100            # number of episode
+    action_space = (8, 16, 24, 32, 48, 52, 64) # these are the action for our agent
+    
+    num_episodes = 10            # number of episode
     #max_steps_per_episode = 100     # number of step per episode
     
     learning_rate = 0.1             # value of alpha
@@ -192,7 +191,7 @@ def agent_train():
         #sumo_config()
         rewards_current_episode = 0 # reword with in the current episode and for every new episode it sets to 0 and get updated in the episode loop              
         print("Running ", episode, " simulation")
-        run(q_table,exploration_rate,learning_rate,discount_rate)
+        run(q_table,exploration_rate,learning_rate,discount_rate,action_space)
         sumo_config()
         # Exploration rate decay
         exploration_rate = min_exploration_rate + \

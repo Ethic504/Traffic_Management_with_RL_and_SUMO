@@ -8,7 +8,7 @@ import random
 from sumolib import checkBinary  # Checks for the binary in environ vars
 import traci
 import numpy as np
-from csv import reader
+import csv
 
 # import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -20,7 +20,7 @@ else:
 def get_options():
     opt_parser = optparse.OptionParser()
     opt_parser.add_option("--nogui", action="store_true",
-                         default=False, help="run the commandline version of sumo")
+                          default=False, help="run the commandline version of sumo")
     options, args = opt_parser.parse_args()
     return options
 
@@ -29,7 +29,7 @@ def sumo_config():
     #while True:
     sumoBinary = checkBinary('sumo')
     traci.start([sumoBinary, "-c", "map.sumo.cfg",
-                             "--tripinfo-output", "tripinfo.xml"])
+                              "--tripinfo-output", "tripinfo.xml"])
     
     print("******************Running Gui********************")
     
@@ -71,9 +71,9 @@ def generate_light_control_file(action):
 def run(q_table):
     action_space = [8, 16, 24, 32, 48, 52, 64]
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
-        state = int(traci.simulation.getTime())
-        action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
-        print(action,type(action))
+        state = traci.simulation.getTime()
+        #action = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
+        print(state,type(state))
         #ac = action_space[action]
         #generate_light_control_file(ac)
         
@@ -81,19 +81,45 @@ def run(q_table):
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
     
+    
 def agent_test():
     # read csv file as a list of lists
-    with open('q_table.csv', 'r') as read_obj:
-        # pass the file object to reader() to get the reader object
-        csv_reader = reader(read_obj)
-        # Pass reader object to list() to get a list of lists
-        q_table = list(csv_reader)
-        print(q_table)
+    q_table = list(csv.reader(open('q_table.csv')))
+    q_table = [list( map(float,i) ) for i in q_table] # convert list of string into list of integer
+    print(q_table)
     for episodes in range(3):
         print("Running ", episodes+1, " simulation")
-        #run(q_table)
+        run(q_table)
         print(q_table[0][0])
         
     
 
 agent_test()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
