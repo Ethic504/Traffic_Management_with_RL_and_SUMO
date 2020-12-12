@@ -59,12 +59,12 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
         state = int(traci.simulation.getTime())
-        print(state)
+        #print(state)
         exploration_rate_threshold = random.uniform(0, 1) # set the exploration thrasehold random in between 0 to 1, this will help the agent so take decission for going exploration or exploatation 
         if exploration_rate_threshold > exploration_rate: # agent will exploite the environment 
             column = np.argmax(q_table[state,:]) # and will choose the max value index from the Q-table
             action = action_space[column]
-            generate_light_control_file(action_space[action]) 
+            generate_light_control_file(action) 
             
         else: # agent will explore the environment 
             rand_action = random.sample(action_space,1) # and sample an action randomly/takes new action
@@ -105,7 +105,7 @@ def data_write(Time, waitingTime, action, reward, su):
                         'Wate'  : waitingTime,
                         'Action' : action,
                         'Reward'  : reward,}) 
-    df.to_csv('action_list.csv') # write a csv file
+    df.to_csv('action_list_q_learning.csv') # write a csv file
     print("Leaving Simulation...")
 
 def generate_light_control_file(int_action):
@@ -171,7 +171,7 @@ def agent_train():
     q_table = np.zeros((state_space_size, action_space_size)) # row & column
     #print(q_table)
     
-    action_space = (8, 16, 24, 32, 48, 52, 64) # these are the action for our agent
+    action_space = [8, 16, 24, 32, 48, 52, 64] # these are the action for our agent
     
     num_episodes = 10            # number of episode
     #max_steps_per_episode = 100     # number of step per episode
