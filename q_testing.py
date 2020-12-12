@@ -86,8 +86,9 @@ def run(q_table,episodes,action_space):
             count += 1
             #print(state,type(state))
         except ValueError:
+            time.sleep(1)
             print("The q_table empty")
-            traci.close()
+            time.sleep(1)
             break
         
         action = action_space[index]
