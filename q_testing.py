@@ -9,6 +9,7 @@ from sumolib import checkBinary  # Checks for the binary in environ vars
 import traci
 import numpy as np
 import csv
+import time
 
 # import some python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
@@ -31,7 +32,7 @@ def sumo_config():
     traci.start([sumoBinary, "-c", "map.sumo.cfg",
                               "--tripinfo-output", "tripinfo.xml"])
     
-    print("******************Running Gui********************")
+    #print("******************Running Gui********************")
     
 # main entry point to sumo
 if __name__ == "__main__":
@@ -68,41 +69,46 @@ def generate_light_control_file(action):
         print('</tlLogic>', file = lights)
         print('</additional>', file = lights)
 
-def run(q_table,episodes):
-    action_space = [8, 16, 24, 32, 48, 52, 64]
+def run(q_table,episodes,action_space):
+    
     print("Running Simulation ", episodes)
+    count = 0
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
-        traci.simulationStep() # performs a simulation step
         state = int(traci.simulation.getTime())
         try:
             # it will choose the max value index from the Q-table
-            rows_count = len(q_table)
-            for i in range(rows_count):
-                a_row = q_table[i]
-                max_value = max(a_row)
-                index = a_row.index(max_value)
-                #print("The max value ",max_value, " and Index in ",index)
+            #rows_count = len(q_table) # how many row in q_table
+            
+            a_row = q_table[count]
+            max_value = max(a_row)
+            index = a_row.index(max_value)
+            print(state,"   The max value ",max_value, " and Index in ",index)
+            count += 1
             #print(state,type(state))
         except ValueError:
             print("The q_table empty")
+            traci.close()
             break
         
-        action = action_space[action_space[index]]
+        action = action_space[index]
         generate_light_control_file(action)
-        
-    print("Done...")
+        traci.simulationStep() # performs a simulation step
+
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
+    time.sleep(1)
     
     
 def agent_test():
     # read csv file as a list of lists
     q_table = list(csv.reader(open('q_table.csv')))
     q_table = [list( map(float,i) ) for i in q_table] # convert list of string into list of integer
+    action_space = [8, 16, 24, 32, 48, 52, 64]
     print(q_table)
     for episodes in range(3):
-        run(q_table,episodes)
-        
+        run(q_table,episodes,action_space)
+        print("Done  ", episodes)
+        sumo_config()
     
 
 agent_test()
