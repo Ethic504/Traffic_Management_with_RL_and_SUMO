@@ -111,7 +111,7 @@ def data_write(Time, waitingTime, action, reward, su):
 def generate_light_control_file(int_action):
     a = int_action
     #print(a)
-    with open("light_control_q_learning.add.xml", "w") as lights:
+    with open("light_control1.add.xml", "w") as lights:
         print('<additional>>', file = lights)
         print('<tlLogic id="1575325597" type="static" programID="2" offset="0">', file = lights)
         print('<phase duration="%a" state="gggrrr"/>' %(a), file = lights)
@@ -201,13 +201,7 @@ def agent_train():
         rewards_all_episodes.append(rewards_current_episode) # update the reward list for each episode
     #print(q_table)           
     q_table_to_csv(q_table) # to take Q-table in csv file
-    
-    # reward_per_hun_epi = np.split(np.array(rewards_all_episodes),num_episodes/100)
-    # count = 100
-    # for r in reward_per_hun_epi:
-    #     print(count, ' : ', str(sum(r/100)))
-    #     count += 100
-    
+
 agent_train()  
     
 '''
