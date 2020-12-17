@@ -83,8 +83,8 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         
         
         # update Q-table
-        q_table[state,column] = q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))
-        
+        q_table[state,column] = ((q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))) + q_table[state,column]) / 2
+        #                       ((--------------------------------------previous mathod-------------------------------------------------------------------) + old q_value          ) / 2
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
         waiting_list.append(waitingTimeFunc())
