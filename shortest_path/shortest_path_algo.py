@@ -24,8 +24,7 @@ def get_options():
 # this function is responsibe for running the simulation
 def sumo_config():
     sumoBinary = checkBinary('sumo')
-    traci.start([sumoBinary, "-c", "map.sumo.cfg",
-                              "--tripinfo-output", "tripinfo.xml"])
+    traci.start([sumoBinary, "-c", "map.sumo.cfg"])
     
     print("******************Running Gui********************")
     
@@ -221,14 +220,16 @@ def select_road(li):
     return road
           
 def rewardFunc(waitingTime):
-    if waitingTime > 500:
-        reWoRdd = -1
-    elif waitingTime < 200:
-        reWoRdd = 10
-    elif waitingTime > 200 and waitingTime < 500:
-        reWoRdd = 5
+    if waitingTime >= 500 and waitingTime < 600:
+        reWoRdd = -3
+    elif waitingTime <= 150:
+        reWoRdd = 7
+    elif waitingTime > 150 and waitingTime < 300:
+        reWoRdd = 5   
+    elif waitingTime >= 300 and waitingTime < 500:
+        reWoRdd = 3
     else:
-        reWoRdd = -10
+        reWoRdd = -9
     return reWoRdd
 
 import pandas as pd

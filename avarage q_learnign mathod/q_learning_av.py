@@ -40,14 +40,16 @@ def waitingTimeFunc():
     return sum(waitingTimeList), len(waiting_car)
    
 def rewardFunc(waitingTime):
-    if waitingTime > 500:
-        reWoRdd = -1
-    elif waitingTime < 200:
-        reWoRdd = 10
-    elif waitingTime > 200 and waitingTime < 500:
-        reWoRdd = 5
+    if waitingTime >= 500 and waitingTime < 600:
+        reWoRdd = -3
+    elif waitingTime <= 150:
+        reWoRdd = 7
+    elif waitingTime > 150 and waitingTime < 300:
+        reWoRdd = 5   
+    elif waitingTime >= 300 and waitingTime < 500:
+        reWoRdd = 3
     else:
-        reWoRdd = -10
+        reWoRdd = -9
     return reWoRdd
     
 # main sumo runner and act as single episode each time it is called
@@ -149,7 +151,7 @@ def generate_light_control_file(int_action):
 def q_table_to_csv(q_table):
     # field names  
     #fields = [8, 16, 24, 32, 48, 52, 64]    
-    with open('q_table.csv', 'w', newline="") as f:  
+    with open('q_table_av.csv', 'w', newline="") as f:  
         writer = csv.writer(f)   # using csv.writer method from CSV package
           
         #write.writerow(fields)  # when u need field name on top row
@@ -159,8 +161,7 @@ def q_table_to_csv(q_table):
 def sumo_config():
     #while True:
     sumoBinary = checkBinary('sumo')
-    traci.start([sumoBinary, "-c", "map.sumo.cfg",
-                             "--tripinfo-output", "tripinfo.xml"])
+    traci.start([sumoBinary, "-c", "map.sumo.cfg",])
     
     print("******************Running Gui********************")
     

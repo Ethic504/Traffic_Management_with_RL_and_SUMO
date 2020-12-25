@@ -89,7 +89,7 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         
         
         # update Q-table
-        q_table[state,column] = q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))
+        q_table[state,column] = q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * (q_table[int(new_state),:]))
         
         
         time_list.append(traci.simulation.getTime())
@@ -113,7 +113,7 @@ def data_write(step, waitingTime, action, reward, waiting_car):
                         'Waiting Car' : waiting_car,
                         'Action' : action,
                         'Reward'  : reward,}) 
-    df.to_csv('action_list_q_learning.csv') # write a csv file
+    df.to_csv('action_list_sarsa.csv') # write a csv file
     print("Leaving Simulation...")
 
 def generate_light_control_file(int_action):
