@@ -56,9 +56,9 @@ def rewardFunc(waitingTime):
 def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
     time_list = []
     waiting_list = []
+    waiting_car_list = []
     action_list = []
     reward_list = []
-    getWaitingCar_list = []
     column = 0
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         
@@ -79,8 +79,8 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
             generate_light_control_file(action) # sending action as a list with 1 element
         traci.simulationStep() # performs a simulation step
         new_state = int(traci.simulation.getTime()) # 
-        wt, wc = waitingTimeFunc()
-        reward = rewardFunc(wt)
+        total_waiting_time, waiting_car = (waitingTimeFunc())
+        reward = rewardFunc(total_waiting_time)
         
         
         #print(state,int_action,new_state)
@@ -94,11 +94,11 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
-        waiting_list.append(waitingTimeFunc())
+        waiting_list.append(total_waiting_time)
         action_list.append(action)
         reward_list.append(reward)
-        getWaitingCar_list.append(wc)
-    data_write(time_list, waiting_list,getWaitingCar_list, action_list,reward_list)
+        waiting_car_list.append(waiting_car)
+    data_write(time_list, waiting_list, action_list,reward_list, waiting_car_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
     print("Reward is ",sum(reward_list))
@@ -107,13 +107,13 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
 
 import pandas as pd
 import csv
-def data_write(step, waitingTime, waitingCar, action, reward):
+def data_write(step, waitingTime, action, reward, waiting_car):
     # Create the dataframe 
-    df = pd.DataFrame({'SIM Time'       : step, 
+    df = pd.DataFrame({'SIM Time' : step, 
                         'Waiting Time'  : waitingTime,
-                        'Waiting Car' : waitingCar,
+                        'Waiting Car' : waiting_car,
                         'Action' : action,
-                        'Reward'  : reward,}) 
+                        'Reward'  : reward,})
     df.to_csv('action_list_q_learning_ave.csv') # write a csv file
     print("Leaving Simulation...")
 
