@@ -42,7 +42,7 @@ def generate_light_control_file(road,action):
     # road d is connected to junction 1693014276 and lanes starts with 384311993
     a = action[0] # array to integer
     if road == 0: # for road a
-        with open("light_control1.add.xml", "w") as lights:
+        with open("light_control1_shortest_path.add.xml", "w") as lights:
             print('<additional>>', file = lights)
             # road a
             print('<tlLogic id="1575361842" type="static" programID="2" offset="0">', file = lights)
@@ -183,6 +183,7 @@ def waitingTime():
     b_road_waiting_time = []
     c_road_waiting_time = []
     d_road_waiting_time = []
+    waiting_car = []
     
     a_road = ["143955381#3_0", "143955381#3_1", "143955381#3_2"]
     b_road = ["24375222#3_0", "24375222#3_1", "24375222#3_2"]
@@ -193,23 +194,27 @@ def waitingTime():
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             a_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+        waiting_car.append(L0)
         del L0
     for x in b_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             b_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+        waiting_car.append(L0)
         del L0
     for x in c_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             c_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+        waiting_car.append(L0)
         del L0
     for x in d_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             d_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+        waiting_car.append(L0)
         del L0
-    return sum(a_road_waiting_time), sum(b_road_waiting_time), sum(c_road_waiting_time), sum(d_road_waiting_time)
+    return sum(a_road_waiting_time), sum(b_road_waiting_time), sum(c_road_waiting_time), sum(d_road_waiting_time), sum(waiting_car)
 
 def select_road(li):
     road = li.index(max(li)) # which road to choose to open and has max waiting time
@@ -228,25 +233,26 @@ def rewardFunc(waitingTime):
 
 import pandas as pd
 import csv
-def data_write(Time, waitingTime, action, reward, su):
+def data_write(step, waitingTime, waitingCar, action, reward):
     # Create the dataframe 
-    df = pd.DataFrame({'Time'       : Time, 
-                        'Wate'  : waitingTime,
+    df = pd.DataFrame({'Step'       : step, 
+                        'Waiting Time'  : waitingTime,
+                        'Waiting Car' : waitingCar,
                         'Action' : action,
                         'Reward'  : reward,}) 
-    df.to_csv('action_list.csv') # write a csv file
+    df.to_csv('shortest_path_dataset.csv') # write a csv file
     print("Leaving Simulation...")
             
 # traCI runner
 def run():
     action_space = [8, 16, 24, 32, 48, 52, 64]
-    time_list = []
+    step_list = []
     waiting_list = []
     action_list = []
     reward_list = []
     
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
-        a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time = waitingTime()
+        a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time, waiting_car = waitingTime()
         # print(state, a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time)
         road = select_road([a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time])
         
@@ -257,12 +263,12 @@ def run():
         
         state = int(traci.simulation.getTime())
         total_waiting_time = sum([a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time])
-        time_list.append(state)
+        step_list.append(state)
         waiting_list.append(total_waiting_time)
         action_list.append(action)
         reward_list.append(total_waiting_time)
         
-    data_write(time_list, waiting_list, action_list,reward_list, reward_list)
+    data_write(step_list, waiting_list, waiting_car, action_list, reward_list)
     del reward_list
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory

@@ -85,6 +85,7 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         # update Q-table
         q_table[state,column] = ((q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))) + q_table[state,column]) / 2
         #                       ((--------------------------------------previous mathod-------------------------------------------------------------------) + old q_value          ) / 2
+        
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
         waiting_list.append(waitingTimeFunc())
@@ -105,7 +106,7 @@ def data_write(Time, waitingTime, action, reward):
                         'Wate'  : waitingTime,
                         'Action' : action,
                         'Reward'  : reward,}) 
-    df.to_csv('action_list_q_learning.csv') # write a csv file
+    df.to_csv('action_list_q_learning_ave.csv') # write a csv file
     print("Leaving Simulation...")
 
 def generate_light_control_file(int_action):
@@ -173,7 +174,7 @@ def agent_train():
     
     action_space = [8, 16, 24, 32, 48, 52, 64] # these are the action for our agent
     
-    num_episodes = 10            # number of episode
+    num_episodes = 100            # number of episode
     #max_steps_per_episode = 100     # number of step per episode
     
     learning_rate = 0.1             # value of alpha
