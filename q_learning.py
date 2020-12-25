@@ -35,9 +35,9 @@ def waitingTimeFunc():
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             waitingTimeList.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
-        waiting_car.append(L0)
+            waiting_car.append(str(i))
         del L0
-    return sum(waitingTimeList), sum(waiting_car)
+    return sum(waitingTimeList), len(waiting_car)
    
 def rewardFunc(waitingTime):
     if waitingTime > 500:
@@ -54,6 +54,7 @@ def rewardFunc(waitingTime):
 def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
     time_list = []
     waiting_list = []
+    waiting_car_list = []
     action_list = []
     reward_list = []
     column = 0
@@ -89,12 +90,12 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         q_table[state,column] = q_table[state,column] * (1-learning_rate) + learning_rate * (reward + discount_rate * np.max(q_table[int(new_state),:]))
         
         
-        #print(traci.simulation.getTime(), ' : ', waitingTimeFunc(),' : ', action)
         time_list.append(traci.simulation.getTime())
-        waiting_list.append(waitingTimeFunc())
+        waiting_list.append(total_waiting_time)
         action_list.append(action)
         reward_list.append(reward)
-    data_write(time_list, waiting_list, action_list,reward_list, waiting_car)
+        waiting_car_list.append(waiting_car)
+    data_write(time_list, waiting_list, action_list,reward_list, waiting_car_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
     print("Reward is ",sum(reward_list))

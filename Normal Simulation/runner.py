@@ -23,6 +23,8 @@ def get_options():
 # this function calculates the total waiting time of a step in the intersectio on 4 edge
 def waitingTimeFunc():
     waitingTimeList = []
+    waiting_car = []
+    
     lane_list = ["143955381#3_0", "143955381#3_1", "143955381#3_2", # each edge has 3 lane
              "24375222#3_0", "24375222#3_1", "24375222#3_2",
               "-23747533#0_0", "-23747533#0_1", "-23747533#0_2",
@@ -32,16 +34,17 @@ def waitingTimeFunc():
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             waitingTimeList.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+            waiting_car.append(str(i))
         del L0
-    return sum(waitingTimeList)
-    waitingTimeList.clear()
+    return sum(waitingTimeList), len(waiting_car)
 
 import pandas as pd
 import csv
-def data_write(getTime_list, getWaitingTime_list):
+def data_write(step, waitingTime, waiting_car):
     # Create the dataframe 
-    df = pd.DataFrame({'Time'       : getTime_list, 
-                        'Wate'  : getWaitingTime_list}) 
+    df = pd.DataFrame({'SIM Time' : step, 
+                        'Waiting Time'  : waitingTime,
+                        'Waiting Car' : waiting_car,}) 
     df.to_csv('normal_simulation_data.csv') # write a csv file
     print("Ok")
 
@@ -49,12 +52,15 @@ def data_write(getTime_list, getWaitingTime_list):
 def run():
     getTime_list = []
     getWaitingTime_list = []
+    getWaitingCar_list = []
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         #print(traci.simulation.getTime(), ' : ', waitingTimeFunc())
         getTime_list.append(traci.simulation.getTime())
-        getWaitingTime_list.append(waitingTimeFunc())
-    data_write(getTime_list, getWaitingTime_list)
+        wt, wc = waitingTimeFunc()
+        getWaitingTime_list.append(wt)
+        getWaitingCar_list.append(wc)
+    data_write(getTime_list, getWaitingTime_list, getWaitingCar_list)
     traci.close()
     sys.stdout.flush()
     print('End of simulation')

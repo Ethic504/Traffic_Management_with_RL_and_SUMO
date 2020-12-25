@@ -25,6 +25,7 @@ def get_options():
 # this function calculates the total waiting time of a step in the intersectio on 4 edge
 def waitingTimeFunc():
     waitingTimeList = []
+    waiting_car = []
     lane_list = ["143955381#3_0", "143955381#3_1", "143955381#3_2", # each edge has 3 lane
              "24375222#3_0", "24375222#3_1", "24375222#3_2",
               "-23747533#0_0", "-23747533#0_1", "-23747533#0_2",
@@ -34,8 +35,9 @@ def waitingTimeFunc():
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             waitingTimeList.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
+            waiting_car.append(str(i))
         del L0
-    return sum(waitingTimeList)
+    return sum(waitingTimeList), len(waiting_car)
    
 def rewardFunc(waitingTime):
     if waitingTime > 500:
@@ -54,6 +56,7 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
     waiting_list = []
     action_list = []
     reward_list = []
+    getWaitingCar_list = []
     column = 0
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         
@@ -74,7 +77,8 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
             generate_light_control_file(action) # sending action as a list with 1 element
         traci.simulationStep() # performs a simulation step
         new_state = int(traci.simulation.getTime()) # 
-        reward = rewardFunc(waitingTimeFunc())
+        wt, wc = waitingTimeFunc()
+        reward = rewardFunc(wt)
         
         
         #print(state,int_action,new_state)
@@ -91,7 +95,8 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
         waiting_list.append(waitingTimeFunc())
         action_list.append(action)
         reward_list.append(reward)
-    data_write(time_list, waiting_list, action_list,reward_list)
+        getWaitingCar_list.append(wc)
+    data_write(time_list, waiting_list,getWaitingCar_list, action_list,reward_list)
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
     print("Reward is ",sum(reward_list))
@@ -100,10 +105,11 @@ def run(q_table,exploration_rate,learning_rate,discount_rate,action_space):
 
 import pandas as pd
 import csv
-def data_write(Time, waitingTime, action, reward):
+def data_write(step, waitingTime, waitingCar, action, reward):
     # Create the dataframe 
-    df = pd.DataFrame({'Time'       : Time, 
-                        'Wate'  : waitingTime,
+    df = pd.DataFrame({'SIM Time'       : step, 
+                        'Waiting Time'  : waitingTime,
+                        'Waiting Car' : waitingCar,
                         'Action' : action,
                         'Reward'  : reward,}) 
     df.to_csv('action_list_q_learning_ave.csv') # write a csv file

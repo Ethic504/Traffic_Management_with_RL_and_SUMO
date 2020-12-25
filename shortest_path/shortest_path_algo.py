@@ -194,27 +194,27 @@ def waitingTime():
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             a_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
-        waiting_car.append(L0)
+            waiting_car.append(str(i))
         del L0
     for x in b_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             b_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
-        waiting_car.append(L0)
+            waiting_car.append(str(i))
         del L0
     for x in c_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             c_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
-        waiting_car.append(L0)
+            waiting_car.append(str(i))
         del L0
     for x in d_road:                             # itarate the lanes list and calculates waiting time for each lane
         L0 = traci.lane.getLastStepVehicleIDs(x)    # gets a list of carID waiting on the lane
         for i in L0:                                # iterate in the carID list 
             d_road_waiting_time.append(traci.vehicle.getWaitingTime(str(i))) # count each car waiting time by carID and in the list
-        waiting_car.append(L0)
+            waiting_car.append(str(i))
         del L0
-    return sum(a_road_waiting_time), sum(b_road_waiting_time), sum(c_road_waiting_time), sum(d_road_waiting_time), sum(waiting_car)
+    return sum(a_road_waiting_time), sum(b_road_waiting_time), sum(c_road_waiting_time), sum(d_road_waiting_time), len(waiting_car)
 
 def select_road(li):
     road = li.index(max(li)) # which road to choose to open and has max waiting time
@@ -250,6 +250,7 @@ def run():
     waiting_list = []
     action_list = []
     reward_list = []
+    waiting_car_list = []
     
     while traci.simulation.getMinExpectedNumber() > 0: # step loop in a single episode
         a_road_waiting_time, b_road_waiting_time, c_road_waiting_time, d_road_waiting_time, waiting_car = waitingTime()
@@ -267,8 +268,8 @@ def run():
         waiting_list.append(total_waiting_time)
         action_list.append(action)
         reward_list.append(total_waiting_time)
-        
-    data_write(step_list, waiting_list, waiting_car, action_list, reward_list)
+        waiting_car_list.append(waiting_car)
+    data_write(step_list, waiting_list, waiting_car_list, action_list, reward_list)
     del reward_list
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
