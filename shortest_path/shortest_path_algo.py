@@ -235,7 +235,7 @@ import pandas as pd
 import csv
 def data_write(step, waitingTime, waitingCar, action, reward):
     # Create the dataframe 
-    df = pd.DataFrame({'Step'       : step, 
+    df = pd.DataFrame({'SIM Time' : step, 
                         'Waiting Time'  : waitingTime,
                         'Waiting Car' : waitingCar,
                         'Action' : action,
