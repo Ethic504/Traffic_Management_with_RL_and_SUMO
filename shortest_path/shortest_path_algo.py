@@ -268,9 +268,10 @@ def run():
         step_list.append(state)
         waiting_list.append(total_waiting_time)
         action_list.append(action)
-        reward_list.append(total_waiting_time)
+        reward_list.append(rewardFunc(total_waiting_time))
         waiting_car_list.append(waiting_car)
     data_write(step_list, waiting_list, waiting_car_list, action_list, reward_list)
+    print(waiting_car_list,reward_list)
     del reward_list
     traci.close()   # this is to stop the simulation that was running 
     sys.stdout.flush()  # buffer for memory
